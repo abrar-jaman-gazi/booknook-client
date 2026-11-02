@@ -8,6 +8,8 @@ import jwt from "jsonwebtoken";
 
 export async function POST() {
   try {
+
+  
     // Verify the current Better Auth session.
     const session = await auth.api.getSession({
       headers: await headers(),
