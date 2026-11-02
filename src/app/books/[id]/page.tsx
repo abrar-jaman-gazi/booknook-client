@@ -347,6 +347,8 @@ export default function BookDetailsPage() {
     fullScreen
   />
 }
+
+
     >
       <BookDetailsContent />
     </Suspense>
