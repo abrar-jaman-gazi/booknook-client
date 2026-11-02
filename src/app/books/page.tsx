@@ -183,6 +183,7 @@ export default function BooksPage() {
           </div>
         </div>
 
+
         {/* Results heading */}
         <div className="mb-7 flex items-center justify-between gap-4">
           <div>
