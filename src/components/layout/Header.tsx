@@ -203,6 +203,7 @@ export default function Header() {
         </div>
 
         {/* Mobile navigation controls */}
+        {/* Mobile navigation controls */}
         <div className="flex items-center gap-3 md:hidden">
           <Link
             href="/books"
