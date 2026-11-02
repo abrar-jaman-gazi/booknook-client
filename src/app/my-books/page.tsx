@@ -18,6 +18,7 @@ import {
 import { useSession } from "@/lib/auth-client";
 import { apiRequest } from "@/lib/api";
 import { toast } from "sonner";
+import Loading from "@/components/shared/Loading";
 
 const categories = ["Fiction", "Science", "History", "Kids", "Others"] as const;
 
@@ -220,17 +221,15 @@ export default function MyBooksPage() {
   }
 
   if (sessionLoading || loading) {
-    return (
-      <main className="flex min-h-[70vh] items-center justify-center bg-[#F8F7F2]">
-        <div className="text-center">
-          <Loader2 className="mx-auto animate-spin text-[#1F4D3A]" size={40} />
-          <p className="mt-4 text-sm text-gray-500">
-            Loading your collection...
-          </p>
-        </div>
-      </main>
-    );
-  }
+  return (
+    <main className="bg-[#F8F7F2]">
+      <Loading
+        message="Loading your collection..."
+        fullScreen
+      />
+    </main>
+  );
+}
 
   if (!session) return null;
 

@@ -8,11 +8,12 @@ import {
   Search,
   BookOpen,
   SlidersHorizontal,
-  LoaderCircle,
   AlertCircle,
   BookMarked,
   ArrowRight,
 } from "lucide-react";
+
+import Loading from "@/components/shared/Loading";
 
 interface Book {
   _id: string;
@@ -199,17 +200,10 @@ export default function BooksPage() {
         </div>
 
         {/* Loading state */}
-        {loading && (
-          <div className="flex min-h-[300px] flex-col items-center justify-center">
-            <LoaderCircle
-              size={38}
-              className="animate-spin text-[#173D32]"
-            />
-            <p className="mt-4 text-sm text-gray-500">
-              Loading books from our library...
-            </p>
-          </div>
-        )}
+        {/* Loading state */}
+{loading && (
+  <Loading message="Loading books from our library..." />
+)}
 
         {/* Error state */}
         {!loading && error && (

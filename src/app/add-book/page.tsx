@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { apiRequest } from "@/lib/api";
 import { toast } from "sonner";
+import Loading from "@/components/shared/Loading";
 import {
   ArrowLeft,
   BookOpen,
@@ -200,12 +201,15 @@ export default function AddBookPage() {
   }
 
   if (sessionLoading) {
-    return (
-      <main className="flex min-h-[70vh] items-center justify-center bg-[#F8F7F2]">
-        <LoaderCircle className="animate-spin text-[#173D32]" size={36} />
-      </main>
-    );
-  }
+  return (
+    <main className="bg-[#F8F7F2]">
+      <Loading
+        message="Preparing your book submission form..."
+        fullScreen
+      />
+    </main>
+  );
+}
 
   if (!user) {
     return (

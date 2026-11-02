@@ -16,6 +16,7 @@ import { useSession } from "@/lib/auth-client";
 import { apiRequest } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Loading from "@/components/shared/Loading";
 
 interface Borrow {
   _id: string;
@@ -113,18 +114,16 @@ export default function MyBorrowsPage() {
     });
   }
 
-  if (sessionLoading || loading) {
-    return (
-      <main className="flex min-h-[70vh] items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-[#1F4D3A] border-t-transparent" />
-          <p className="mt-4 text-sm text-gray-500">
-            Loading your borrowing history...
-          </p>
-        </div>
-      </main>
-    );
-  }
+ if (sessionLoading || loading) {
+  return (
+    <main className="bg-[#F8F7F2]">
+      <Loading
+        message="Loading your borrowing history..."
+        fullScreen
+      />
+    </main>
+  );
+}
 
   if (!session) {
     return null;

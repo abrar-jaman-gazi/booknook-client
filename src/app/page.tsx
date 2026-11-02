@@ -12,7 +12,10 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 
+// ============================================
 // Hero slider content
+// ============================================
+
 const slides = [
   {
     eyebrow: "A WORLD BETWEEN PAGES",
@@ -40,7 +43,10 @@ const slides = [
   },
 ];
 
+// ============================================
 // Book data types
+// ============================================
+
 interface Book {
   _id: string;
   title: string;
@@ -59,7 +65,10 @@ interface BooksResponse {
   data: Book[];
 }
 
+// ============================================
 // Book categories
+// ============================================
+
 const categories = [
   {
     name: "Fiction",
@@ -88,12 +97,18 @@ const categories = [
   },
 ];
 
+// ============================================
+// Homepage
+// ============================================
+
 export default function HomePage() {
   const [latestBooks, setLatestBooks] = useState<Book[]>([]);
   const [booksLoading, setBooksLoading] = useState(true);
 
-  // Fetch latest books from the Express API
+  // Fetch the latest 6 books directly from MongoDB
   useEffect(() => {
+    let isMounted = true;
+
     async function fetchLatestBooks() {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -102,9 +117,12 @@ export default function HomePage() {
           throw new Error("API URL is not configured.");
         }
 
-        const response = await fetch(`${apiUrl}/api/books`, {
-          cache: "no-store",
-        });
+        const response = await fetch(
+          `${apiUrl}/api/books?limit=6`,
+          {
+            cache: "no-store",
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Unable to fetch books.");
@@ -112,30 +130,40 @@ export default function HomePage() {
 
         const result: BooksResponse = await response.json();
 
-        // Sort books by creation date, newest first.
-        const sortedBooks = [...(result.data || [])]
-          .sort(
-            (a, b) =>
-              new Date(b.createdAt).getTime() -
-              new Date(a.createdAt).getTime()
-          )
-          .slice(0, 6);
+        if (!result.success) {
+          throw new Error("Failed to load latest books.");
+        }
 
-        setLatestBooks(sortedBooks);
+        if (isMounted) {
+          // MongoDB already sorts and limits the results.
+          setLatestBooks(result.data || []);
+        }
       } catch (error) {
         console.error("Homepage book loading error:", error);
-        setLatestBooks([]);
+
+        if (isMounted) {
+          setLatestBooks([]);
+        }
       } finally {
-        setBooksLoading(false);
+        if (isMounted) {
+          setBooksLoading(false);
+        }
       }
     }
 
     fetchLatestBooks();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
     <div>
-      {/* Hero Slider */}
+      {/* ========================================
+          Hero Slider
+      ======================================== */}
+
       <section className="relative">
         <Suspense
           fallback={
@@ -190,7 +218,10 @@ export default function HomePage() {
         </Suspense>
       </section>
 
-      {/* Introduction */}
+      {/* ========================================
+          Introduction
+      ======================================== */}
+
       <section className="section-padding">
         <div className="container-main grid items-center gap-12 md:grid-cols-2">
           <div>
@@ -218,7 +249,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Dynamic New Arrivals */}
+      {/* ========================================
+          Dynamic New Arrivals
+      ======================================== */}
+
       <section className="section-padding bg-[#f1f0e9]">
         <div className="container-main">
           <div className="mb-12 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
@@ -257,9 +291,12 @@ export default function HomePage() {
                 </div>
               ))
             ) : latestBooks.length > 0 ? (
-              // Actual books from MongoDB
+              // Latest books returned by MongoDB
               latestBooks.map((book) => (
-                <article key={book._id} className="book-card group">
+                <article
+                  key={book._id}
+                  className="book-card group"
+                >
                   <div className="relative h-[300px] overflow-hidden bg-[#e8e5dc]">
                     {book.image ? (
                       <div
@@ -312,7 +349,7 @@ export default function HomePage() {
                       href={`/books/${book._id}`}
                       className="mt-5 inline-flex text-sm font-semibold text-primary hover:text-accent"
                     >
-                      Explore book →
+                      View Details →
                     </Link>
                   </div>
                 </article>
@@ -342,7 +379,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
+      {/* ========================================
+          Categories
+      ======================================== */}
+
       <section className="section-padding">
         <div className="container-main">
           <div className="mb-12 text-center">
@@ -385,7 +425,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* How It Works */}
+      {/* ========================================
+          How It Works
+      ======================================== */}
+
       <section className="section-padding bg-[#193829] text-white">
         <div className="container-main">
           <div className="max-w-2xl">
@@ -440,7 +483,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Final CTA */}
+      {/* ========================================
+          Final CTA
+      ======================================== */}
+
       <section className="section-padding">
         <div className="container-main rounded-xl bg-[#e9e5d9] px-7 py-14 text-center md:px-16 md:py-20">
           <p className="section-eyebrow">

@@ -7,6 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { apiRequest } from "@/lib/api";
 import { toast } from "sonner";
+import Loading from "@/components/shared/Loading";
 import {
   ArrowLeft,
   BookOpen,
@@ -128,20 +129,15 @@ function BookDetailsContent() {
   }
 
   if (loading || sessionLoading) {
-    return (
-      <main className="flex min-h-[70vh] items-center justify-center bg-[#F8F7F2]">
-        <div className="text-center">
-          <LoaderCircle
-            size={38}
-            className="mx-auto animate-spin text-[#173D32]"
-          />
-          <p className="mt-4 text-sm text-gray-500">
-            Loading book details...
-          </p>
-        </div>
-      </main>
-    );
-  }
+  return (
+    <main className="bg-[#F8F7F2]">
+      <Loading
+        message="Loading book details..."
+        fullScreen
+      />
+    </main>
+  );
+}
 
   if (error || !book) {
     return (
@@ -346,10 +342,11 @@ export default function BookDetailsPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#1F4D3A] border-t-transparent" />
-        </div>
-      }
+  <Loading
+    message="Preparing book details..."
+    fullScreen
+  />
+}
     >
       <BookDetailsContent />
     </Suspense>
