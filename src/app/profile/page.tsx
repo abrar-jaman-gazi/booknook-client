@@ -146,6 +146,8 @@ export default function ProfilePage() {
                 Account Information
               </h3>
 
+              
+
               <div className="grid gap-5 sm:grid-cols-2">
 
                 <div className="rounded-xl border border-gray-100 bg-[#FAFAF8] p-5">
