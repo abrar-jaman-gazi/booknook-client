@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { Suspense, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "@/lib/auth-client";
@@ -15,7 +15,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -42,9 +42,7 @@ export default function LoginPage() {
       });
 
       if (result.error) {
-        toast.error(
-          result.error.message || "Invalid email or password."
-        );
+        toast.error(result.error.message || "Invalid email or password.");
         return;
       }
 
@@ -86,7 +84,6 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-[#F8F7F2] px-4 py-12">
       <div className="mx-auto grid max-w-6xl overflow-hidden rounded-3xl bg-white shadow-xl md:grid-cols-2">
-
         {/* Left information panel */}
         <div className="relative hidden min-h-[650px] flex-col justify-between overflow-hidden bg-[#173D32] p-12 text-white md:flex">
           <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#D6A84B]/20 blur-3xl" />
@@ -111,8 +108,8 @@ export default function LoginPage() {
               Your next chapter starts here.
             </h1>
             <p className="max-w-md text-lg leading-8 text-white/75">
-              Sign in to explore your library, discover new books,
-              and continue your reading journey with BookNook.
+              Sign in to explore your library, discover new books, and continue
+              your reading journey with BookNook.
             </p>
           </div>
 
@@ -124,7 +121,6 @@ export default function LoginPage() {
         {/* Login form */}
         <div className="flex items-center justify-center p-6 py-12 sm:p-10 md:p-12">
           <div className="w-full max-w-md">
-
             <div className="mb-8 md:hidden">
               <Link href="/" className="inline-flex items-center gap-2">
                 <BookOpen className="text-[#173D32]" size={28} />
@@ -147,7 +143,6 @@ export default function LoginPage() {
             </div>
 
             <form onSubmit={handleLogin} className="space-y-5">
-
               {/* Email */}
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-700">
@@ -244,8 +239,6 @@ export default function LoginPage() {
             </div>
 
             {/* Google login */}
-
-            
             <button
               type="button"
               onClick={handleGoogleLogin}
@@ -300,5 +293,21 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-[#F8F7F2]">
+          <div className="text-sm font-medium text-[#173D32]">
+            Preparing your login page...
+          </div>
+        </main>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }
