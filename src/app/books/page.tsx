@@ -199,7 +199,7 @@ export default function BooksPage() {
           </div>
         </div>
 
-        {/* Loading state */}
+  
         {/* Loading state */}
 {loading && (
   <Loading message="Loading books from our library..." />
