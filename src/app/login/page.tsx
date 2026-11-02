@@ -244,6 +244,8 @@ export default function LoginPage() {
             </div>
 
             {/* Google login */}
+
+            
             <button
               type="button"
               onClick={handleGoogleLogin}
