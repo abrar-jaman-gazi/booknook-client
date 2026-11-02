@@ -2,14 +2,17 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState, Suspense } from "react";
+import { BookOpen } from "lucide-react";
+
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, EffectFade } from "swiper/modules";
-import { Suspense } from "react";
 
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 
+// Hero slider content
 const slides = [
   {
     eyebrow: "A WORLD BETWEEN PAGES",
@@ -37,51 +40,26 @@ const slides = [
   },
 ];
 
-const sampleBooks = [
-  {
-    title: "The Great Gatsby",
-    author: "F. Scott Fitzgerald",
-    category: "Fiction",
-    image:
-      "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=600",
-  },
-  {
-    title: "A Brief History of Time",
-    author: "Stephen Hawking",
-    category: "Science",
-    image:
-      "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=600",
-  },
-  {
-    title: "The Art of Reading",
-    author: "David Ulin",
-    category: "Others",
-    image:
-      "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600",
-  },
-  {
-    title: "The Silent Patient",
-    author: "Alex Michaelides",
-    category: "Fiction",
-    image:
-      "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=600",
-  },
-  {
-    title: "A Short History of Nearly Everything",
-    author: "Bill Bryson",
-    category: "Science",
-    image:
-      "https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=600",
-  },
-  {
-    title: "The Story of Civilization",
-    author: "Will Durant",
-    category: "History",
-    image:
-      "https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=600",
-  },
-];
+// Book data types
+interface Book {
+  _id: string;
+  title: string;
+  author: string;
+  category: string;
+  image: string;
+  description: string;
+  totalCopies: number;
+  availableCopies: number;
+  createdAt: string;
+}
 
+interface BooksResponse {
+  success: boolean;
+  count: number;
+  data: Book[];
+}
+
+// Book categories
 const categories = [
   {
     name: "Fiction",
@@ -111,58 +89,104 @@ const categories = [
 ];
 
 export default function HomePage() {
+  const [latestBooks, setLatestBooks] = useState<Book[]>([]);
+  const [booksLoading, setBooksLoading] = useState(true);
+
+  // Fetch latest books from the Express API
+  useEffect(() => {
+    async function fetchLatestBooks() {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+        if (!apiUrl) {
+          throw new Error("API URL is not configured.");
+        }
+
+        const response = await fetch(`${apiUrl}/api/books`, {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Unable to fetch books.");
+        }
+
+        const result: BooksResponse = await response.json();
+
+        // Sort books by creation date, newest first.
+        const sortedBooks = [...(result.data || [])]
+          .sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() -
+              new Date(a.createdAt).getTime()
+          )
+          .slice(0, 6);
+
+        setLatestBooks(sortedBooks);
+      } catch (error) {
+        console.error("Homepage book loading error:", error);
+        setLatestBooks([]);
+      } finally {
+        setBooksLoading(false);
+      }
+    }
+
+    fetchLatestBooks();
+  }, []);
+
   return (
     <div>
       {/* Hero Slider */}
       <section className="relative">
         <Suspense
-  fallback={
-    <div className="h-[540px] bg-[#193829] md:h-[620px]" />
-  }
->
-        <Swiper
-          modules={[Autoplay, Pagination, EffectFade]}
-          effect="fade"
-          autoplay={{
-            delay: 5000,
-            disableOnInteraction: false,
-          }}
-          pagination={{ clickable: true }}
-          loop
-          className="h-[540px] md:h-[620px]"
+          fallback={
+            <div className="h-[540px] bg-[#193829] md:h-[620px]" />
+          }
         >
-          {slides.map((slide, index) => (
-            <SwiperSlide key={index}>
-              <div
-                className="relative flex h-full items-center bg-cover bg-center"
-                style={{ backgroundImage: `url(${slide.image})` }}
-              >
-                <div className="absolute inset-0 bg-black/55" />
+          <Swiper
+            modules={[Autoplay, Pagination, EffectFade]}
+            effect="fade"
+            autoplay={{
+              delay: 5000,
+              disableOnInteraction: false,
+            }}
+            pagination={{ clickable: true }}
+            loop
+            className="h-[540px] md:h-[620px]"
+          >
+            {slides.map((slide, index) => (
+              <SwiperSlide key={index}>
+                <div
+                  className="relative flex h-full items-center bg-cover bg-center"
+                  style={{
+                    backgroundImage: `url(${slide.image})`,
+                  }}
+                >
+                  <div className="absolute inset-0 bg-black/55" />
 
-                <div className="container-main relative z-10 py-16 text-white">
-                  <p className="mb-5 text-xs font-semibold tracking-[0.25em] text-[#e5c58c]">
-                    {slide.eyebrow}
-                  </p>
+                  <div className="container-main relative z-10 py-16 text-white">
+                    <p className="mb-5 text-xs font-semibold tracking-[0.25em] text-[#e5c58c]">
+                      {slide.eyebrow}
+                    </p>
 
-                  <h1 className="font-editorial max-w-2xl text-5xl leading-tight font-bold md:text-7xl">
-                    {slide.title}
-                  </h1>
+                    <h1 className="font-editorial max-w-2xl text-5xl leading-tight font-bold md:text-7xl">
+                      {slide.title}
+                    </h1>
 
-                  <p className="mt-6 max-w-xl text-base leading-8 text-white/80 md:text-lg">
-                    {slide.description}
-                  </p>
+                    <p className="mt-6 max-w-xl text-base leading-8 text-white/80 md:text-lg">
+                      {slide.description}
+                    </p>
 
-                  <Link
-                    href="/books"
-                    className="mt-9 inline-flex rounded-md bg-[#244c3a] px-7 py-4 text-sm font-semibold text-white transition hover:bg-[#193829]"
-                  >
-                    Browse Books <span className="ml-3">→</span>
-                  </Link>
+                    <Link
+                      href="/books"
+                      className="mt-9 inline-flex rounded-md bg-[#244c3a] px-7 py-4 text-sm font-semibold text-white transition hover:bg-[#193829]"
+                    >
+                      Browse Books <span className="ml-3">→</span>
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+              </SwiperSlide>
+            ))}
+          </Swiper>
         </Suspense>
       </section>
 
@@ -171,6 +195,7 @@ export default function HomePage() {
         <div className="container-main grid items-center gap-12 md:grid-cols-2">
           <div>
             <p className="section-eyebrow">Welcome to BookNook</p>
+
             <h2 className="font-editorial mt-5 text-4xl leading-tight font-bold md:text-5xl">
               A little corner for people who love books.
             </h2>
@@ -193,15 +218,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* New Arrivals */}
+      {/* Dynamic New Arrivals */}
       <section className="section-padding bg-[#f1f0e9]">
         <div className="container-main">
           <div className="mb-12 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>
               <p className="section-eyebrow">Fresh from the shelves</p>
+
               <h2 className="font-editorial mt-3 text-4xl font-bold">
                 New Arrivals
               </h2>
+
               <p className="mt-3 text-sm text-muted">
                 Discover books waiting to become your next favorite.
               </p>
@@ -213,37 +240,104 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
-            {sampleBooks.map((book) => (
-              <article key={book.title} className="book-card group">
-                <div className="h-[300px] overflow-hidden bg-[#e8e5dc]">
-                  <div
-                    className="h-full w-full bg-cover bg-center transition duration-500 group-hover:scale-105"
-                    style={{ backgroundImage: `url(${book.image})` }}
-                  />
+            {booksLoading ? (
+              // Loading skeletons
+              Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="animate-pulse overflow-hidden rounded-lg border border-border bg-white"
+                >
+                  <div className="h-[300px] bg-[#e8e5dc]" />
+
+                  <div className="space-y-3 p-6">
+                    <div className="h-3 w-20 rounded bg-gray-200" />
+                    <div className="h-6 w-3/4 rounded bg-gray-200" />
+                    <div className="h-4 w-1/2 rounded bg-gray-200" />
+                  </div>
                 </div>
+              ))
+            ) : latestBooks.length > 0 ? (
+              // Actual books from MongoDB
+              latestBooks.map((book) => (
+                <article key={book._id} className="book-card group">
+                  <div className="relative h-[300px] overflow-hidden bg-[#e8e5dc]">
+                    {book.image ? (
+                      <div
+                        className="h-full w-full bg-cover bg-center transition duration-500 group-hover:scale-105"
+                        style={{
+                          backgroundImage: `url("${book.image}")`,
+                        }}
+                        role="img"
+                        aria-label={`Cover of ${book.title}`}
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center">
+                        <BookOpen size={48} className="text-primary" />
+                      </div>
+                    )}
+                  </div>
 
-                <div className="p-6">
-                  <span className="text-xs font-semibold uppercase tracking-widest text-accent">
-                    {book.category}
-                  </span>
+                  <div className="p-6">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-semibold uppercase tracking-widest text-accent">
+                        {book.category}
+                      </span>
 
-                  <h3 className="font-editorial mt-3 text-2xl font-bold">
-                    {book.title}
-                  </h3>
+                      <span
+                        className={`text-xs font-semibold ${
+                          book.availableCopies > 0
+                            ? "text-green-700"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {book.availableCopies > 0
+                          ? "Available"
+                          : "Out of stock"}
+                      </span>
+                    </div>
 
-                  <p className="mt-2 text-sm text-muted">
-                    By {book.author}
-                  </p>
+                    <h3 className="font-editorial mt-3 text-2xl font-bold">
+                      {book.title}
+                    </h3>
 
-                  <Link
-                    href="/books"
-                    className="mt-5 inline-flex text-sm font-semibold text-primary hover:text-accent"
-                  >
-                    Explore book →
-                  </Link>
-                </div>
-              </article>
-            ))}
+                    <p className="mt-2 text-sm text-muted">
+                      By {book.author}
+                    </p>
+
+                    <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted">
+                      {book.description}
+                    </p>
+
+                    <Link
+                      href={`/books/${book._id}`}
+                      className="mt-5 inline-flex text-sm font-semibold text-primary hover:text-accent"
+                    >
+                      Explore book →
+                    </Link>
+                  </div>
+                </article>
+              ))
+            ) : (
+              // Empty state
+              <div className="col-span-full rounded-xl border border-dashed border-border bg-white px-6 py-14 text-center">
+                <BookOpen
+                  className="mx-auto text-primary"
+                  size={42}
+                />
+
+                <h3 className="mt-4 font-editorial text-2xl font-bold">
+                  No books available yet
+                </h3>
+
+                <p className="mt-2 text-sm text-muted">
+                  New books will appear here as they are added to BookNook.
+                </p>
+
+                <Link href="/books" className="btn-primary mt-6">
+                  Explore Library
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -253,9 +347,11 @@ export default function HomePage() {
         <div className="container-main">
           <div className="mb-12 text-center">
             <p className="section-eyebrow">Explore by interest</p>
+
             <h2 className="font-editorial mt-3 text-4xl font-bold">
               Find Your Reading Corner
             </h2>
+
             <p className="mt-4 text-sm text-muted">
               Whatever you enjoy reading, there is a place for you here.
             </p>
@@ -264,7 +360,7 @@ export default function HomePage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {categories.map((category) => (
               <Link
-                href="/books"
+                href={`/books?category=${encodeURIComponent(category.name)}`}
                 key={category.name}
                 className="group rounded-lg border border-border bg-white p-6 transition hover:-translate-y-1 hover:border-primary hover:shadow-lg"
               >
@@ -323,12 +419,17 @@ export default function HomePage() {
                   "Enjoy your reading and return the book when you finish.",
               },
             ].map((step) => (
-              <div key={step.number} className="border-t border-white/20 pt-6">
+              <div
+                key={step.number}
+                className="border-t border-white/20 pt-6"
+              >
                 <span className="font-editorial text-4xl text-[#d8b77c]">
                   {step.number}
                 </span>
 
-                <h3 className="mt-5 text-2xl font-semibold">{step.title}</h3>
+                <h3 className="mt-5 text-2xl font-semibold">
+                  {step.title}
+                </h3>
 
                 <p className="mt-3 max-w-sm text-sm leading-7 text-white/65">
                   {step.description}
@@ -342,7 +443,9 @@ export default function HomePage() {
       {/* Final CTA */}
       <section className="section-padding">
         <div className="container-main rounded-xl bg-[#e9e5d9] px-7 py-14 text-center md:px-16 md:py-20">
-          <p className="section-eyebrow">Your next chapter begins here</p>
+          <p className="section-eyebrow">
+            Your next chapter begins here
+          </p>
 
           <h2 className="font-editorial mx-auto mt-4 max-w-2xl text-4xl font-bold md:text-5xl">
             There is always room for one more book.
