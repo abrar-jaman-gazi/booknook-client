@@ -1,13 +1,14 @@
 
 "use client";
-import { Suspense } from "react";
-import { useEffect, useState } from "react";
+
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { apiRequest } from "@/lib/api";
 import { toast } from "sonner";
 import Loading from "@/components/shared/Loading";
+
 import {
   ArrowLeft,
   BookOpen,
@@ -48,6 +49,7 @@ interface BorrowResponse {
 function BookDetailsContent() {
   const params = useParams();
   const router = useRouter();
+
   const { data: session, isPending: sessionLoading } = useSession();
 
   const bookId = params.id as string;
@@ -57,7 +59,23 @@ function BookDetailsContent() {
   const [borrowing, setBorrowing] = useState(false);
   const [error, setError] = useState("");
 
+  // Check authentication before fetching book details.
   useEffect(() => {
+    if (sessionLoading) {
+      return;
+    }
+
+    // Redirect logged-out visitors to the login page.
+    if (!session?.user) {
+      const requestedUrl = `/books/${bookId}`;
+
+      router.replace(
+        `/login?callbackURL=${encodeURIComponent(requestedUrl)}`
+      );
+
+      return;
+    }
+
     async function fetchBook() {
       try {
         setLoading(true);
@@ -82,12 +100,17 @@ function BookDetailsContent() {
     if (bookId) {
       fetchBook();
     }
-  }, [bookId]);
+  }, [bookId, sessionLoading, session?.user, router]);
 
+  // Borrow book.
   async function handleBorrow() {
     if (!session?.user) {
       toast.error("Please log in to borrow this book.");
-      router.push(`/login?callbackURL=${encodeURIComponent(`/books/${bookId}`)}`);
+
+      router.push(
+        `/login?callbackURL=${encodeURIComponent(`/books/${bookId}`)}`
+      );
+
       return;
     }
 
@@ -109,9 +132,11 @@ function BookDetailsContent() {
         }
       );
 
-      toast.success(result.message || "Book borrowed successfully!");
+      toast.success(
+        result.message || "Book borrowed successfully!"
+      );
 
-      // Refresh the displayed inventory after borrowing.
+      // Refresh inventory after borrowing.
       const updated = await apiRequest<BookResponse>(
         `/api/books/${bookId}`
       );
@@ -128,17 +153,19 @@ function BookDetailsContent() {
     }
   }
 
+  // Show loading while checking authentication or loading the book.
   if (loading || sessionLoading) {
-  return (
-    <main className="bg-[#F8F7F2]">
-      <Loading
-        message="Loading book details..."
-        fullScreen
-      />
-    </main>
-  );
-}
+    return (
+      <main className="bg-[#F8F7F2]">
+        <Loading
+          message="Loading book details..."
+          fullScreen
+        />
+      </main>
+    );
+  }
 
+  // Show an error if the book cannot be found.
   if (error || !book) {
     return (
       <main className="flex min-h-[70vh] items-center justify-center bg-[#F8F7F2] px-4">
@@ -147,12 +174,16 @@ function BookDetailsContent() {
             size={42}
             className="mx-auto text-[#B38B3E]"
           />
+
           <h1 className="mt-4 text-2xl font-bold text-[#173D32]">
             Book not found
           </h1>
+
           <p className="mt-2 text-sm text-gray-500">
-            {error || "This book may have been removed from the library."}
+            {error ||
+              "This book may have been removed from the library."}
           </p>
+
           <Link
             href="/books"
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#173D32] px-6 py-3 text-sm font-semibold text-white hover:bg-[#245545]"
@@ -165,14 +196,13 @@ function BookDetailsContent() {
     );
   }
 
-  const formattedDate = new Date(book.createdAt).toLocaleDateString(
-    "en-US",
-    {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }
-  );
+  const formattedDate = new Date(
+    book.createdAt
+  ).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   const isOwner =
     session?.user?.email?.toLowerCase() ===
@@ -216,7 +246,10 @@ function BookDetailsContent() {
               </h1>
 
               <p className="mt-4 text-lg text-gray-500">
-                By <span className="font-semibold text-gray-700">{book.author}</span>
+                By{" "}
+                <span className="font-semibold text-gray-700">
+                  {book.author}
+                </span>
               </p>
 
               <div className="my-8 h-px bg-gray-100" />
@@ -231,11 +264,15 @@ function BookDetailsContent() {
 
               {/* Inventory */}
               <div className="mt-8 grid grid-cols-2 gap-4">
+
                 <div className="rounded-xl bg-[#FAFAF8] p-4">
                   <div className="flex items-center gap-2 text-gray-400">
                     <Library size={17} />
-                    <span className="text-xs font-medium">Total Copies</span>
+                    <span className="text-xs font-medium">
+                      Total Copies
+                    </span>
                   </div>
+
                   <p className="mt-2 text-2xl font-bold text-[#173D32]">
                     {book.totalCopies}
                   </p>
@@ -244,14 +281,19 @@ function BookDetailsContent() {
                 <div className="rounded-xl bg-[#FAFAF8] p-4">
                   <div className="flex items-center gap-2 text-gray-400">
                     <BookMarked size={17} />
-                    <span className="text-xs font-medium">Available</span>
+                    <span className="text-xs font-medium">
+                      Available
+                    </span>
                   </div>
+
                   <p className="mt-2 text-2xl font-bold text-[#173D32]">
                     {book.availableCopies}
                   </p>
                 </div>
+
               </div>
 
+              {/* Availability status */}
               <div className="mt-5 flex items-center gap-2">
                 <span
                   className={`h-2.5 w-2.5 rounded-full ${
@@ -260,6 +302,7 @@ function BookDetailsContent() {
                       : "bg-red-500"
                   }`}
                 />
+
                 <span
                   className={`text-sm font-semibold ${
                     book.availableCopies > 0
@@ -277,12 +320,17 @@ function BookDetailsContent() {
               <button
                 type="button"
                 onClick={handleBorrow}
-                disabled={borrowing || book.availableCopies <= 0}
+                disabled={
+                  borrowing || book.availableCopies <= 0
+                }
                 className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-[#173D32] px-6 py-4 font-semibold text-white transition hover:bg-[#245545] disabled:cursor-not-allowed disabled:bg-gray-400"
               >
                 {borrowing ? (
                   <>
-                    <LoaderCircle size={18} className="animate-spin" />
+                    <LoaderCircle
+                      size={18}
+                      className="animate-spin"
+                    />
                     Borrowing...
                   </>
                 ) : book.availableCopies <= 0 ? (
@@ -300,6 +348,7 @@ function BookDetailsContent() {
                   You added this book to the library.
                 </p>
               )}
+
             </div>
           </div>
 
@@ -312,9 +361,16 @@ function BookDetailsContent() {
             <div className="grid gap-5 sm:grid-cols-2">
 
               <div className="flex items-start gap-3">
-                <UserRound className="mt-1 text-[#B38B3E]" size={20} />
+                <UserRound
+                  className="mt-1 text-[#B38B3E]"
+                  size={20}
+                />
+
                 <div>
-                  <p className="text-xs text-gray-400">Added By</p>
+                  <p className="text-xs text-gray-400">
+                    Added By
+                  </p>
+
                   <p className="mt-1 text-sm font-semibold text-gray-700">
                     {book.addedBy.name}
                   </p>
@@ -322,9 +378,16 @@ function BookDetailsContent() {
               </div>
 
               <div className="flex items-start gap-3">
-                <CalendarDays className="mt-1 text-[#B38B3E]" size={20} />
+                <CalendarDays
+                  className="mt-1 text-[#B38B3E]"
+                  size={20}
+                />
+
                 <div>
-                  <p className="text-xs text-gray-400">Date Added</p>
+                  <p className="text-xs text-gray-400">
+                    Date Added
+                  </p>
+
                   <p className="mt-1 text-sm font-semibold text-gray-700">
                     {formattedDate}
                   </p>
@@ -333,22 +396,22 @@ function BookDetailsContent() {
 
             </div>
           </div>
+
         </section>
       </div>
     </main>
   );
 }
+
 export default function BookDetailsPage() {
   return (
     <Suspense
       fallback={
-  <Loading
-    message="Preparing book details..."
-    fullScreen
-  />
-}
-
-
+        <Loading
+          message="Preparing book details..."
+          fullScreen
+        />
+      }
     >
       <BookDetailsContent />
     </Suspense>
